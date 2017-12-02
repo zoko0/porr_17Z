@@ -35,4 +35,4 @@ m2(2,1) = 4; m2(2,2) = 5;
 writeln("m2 ",m2);
 
 var m3 = multiplyMatixes(m1, m2);
-writeln("m3 ",m3);  
+writeln("m3 ",m3);
