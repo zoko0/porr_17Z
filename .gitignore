@@ -2,4 +2,4 @@
 *.txt
 test.chpl
 execution_config_consts*
-cholesky.chpl*
+cholesky.chpl
