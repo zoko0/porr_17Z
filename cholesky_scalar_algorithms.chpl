@@ -1,4 +1,4 @@
-module cholesky_scalar_algorithms {
+module cholesky_algorytmy_skalarne {
 
   /*
     algorytm wierszowy
@@ -8,21 +8,21 @@ module cholesky_scalar_algorithms {
             false | jesli A (j, j) <= 0.0
   */
 
-  proc scalar_row_major_outer_product_cholesky ( A : [] )  where ( A.domain.rank == 2 )  {
+  proc cholesky_wierszowa_skalarna ( A : [] )  where ( A.domain.rank == 2 )  {
 
-    const A_rc_indices = A.domain.dim (1);  // indices of either row or column
+    const wskazuje_wiersz_kolumne = A.domain.dim (1);
 
-    for j in A_rc_indices do {
+    for j in wskazuje_wiersz_kolumne do {
 
       if A (j, j) > 0.0 then {
 
 	       A (j, j)      = sqrt ( A (j, j) );
 	       A (j, j+1..) /= A (j, j);
 
-	       forall k in A_rc_indices (j+1..) do
+	       forall k in wskazuje_wiersz_kolumne (j+1..) do
 	         A (k, k..) -= A(j, k..) * A (j, k);
       }
-      else return false; // error return if matrix is not positive sdefinite
+      else return false;
     }
     return true;
   }
@@ -34,11 +34,11 @@ module cholesky_scalar_algorithms {
     zwraca: true  | jesli A (j, j) > 0.0
             false | jesli A (j, j) <= 0.0
   */
-  proc scalar_column_major_outer_product_cholesky ( A : [] )  where ( A.domain.rank == 2 ) {
+  proc cholesky_kolumnowa_skalarna ( A : [] )  where ( A.domain.rank == 2 ) {
 
-    const A_rc_indices = A.domain.dim (1);  // row and column indices of A
+    const wskazuje_wiersz_kolumne = A.domain.dim (1);
 
-    for j in A_rc_indices do {
+    for j in wskazuje_wiersz_kolumne do {
 
       if A (j, j) > 0.0 then {
 
@@ -46,7 +46,7 @@ module cholesky_scalar_algorithms {
 	       A (j+1.., j ) /= A (j, j);
 
 
-	       forall k in A_rc_indices (j+1..) do
+	       forall k in wskazuje_wiersz_kolumne (j+1..) do
 	         A (k.., k) -= A(k.., j) * A (k, j);
          }
          else return false;

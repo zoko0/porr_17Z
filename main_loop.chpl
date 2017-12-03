@@ -1,21 +1,21 @@
-odule performance_cholesky_test {
+module cholesky_test_wydajnosci {
 
   use Random, Time;
-  use cholesky;
+  use cholesky_algorytmy_skalarne;
 
   /*****************************************************************************
     Konfigurajca:
     n - wymiar macierzy
-    index_base - tylko i wylacznie do wyswietlania, powinno byc rowne 0 (TODO)
-    print_matrix_details - czy drukowac macierze (funkcja print_lower_triangle)
-    reproductible_output - false - oznacza, ze drukuje czasy
+    bazowy_indeks - tylko i wylacznie do wyswietlania, powinno byc rowne 0
+    wyswietlaj_macierz - czy drukowac macierze (funkcja wyswietl_dolny_trojkat_macierzy)
+    nie_drukuj_czasow - false - oznacza, ze drukuje czasy
   *****************************************************************************/
 
   config const n = 1000;
-  config const index_base = 0;
+  config const bazowy_indeks = 0;
 
-  config const print_matrix_details = false;
-  config const reproducible_output = false;
+  config const wyswietlaj_macierz = false;
+  config const nie_drukuj_czasow = false;
 
   /*****************************************************************************
     Koniec konfiguracji
@@ -25,13 +25,13 @@ odule performance_cholesky_test {
 
     var Rand = new RandomStream ( real, seed = 314159) ;
 
-    const mat_dom : domain (2) = { index_base .. #n, index_base .. #n };
+    const zakres_macierzy : domain (2) = { bazowy_indeks .. #n, bazowy_indeks .. #n };
 
-    var A : [mat_dom] real,
-        B : [mat_dom] real,
-        L : [mat_dom] real;
+    var A : [zakres_macierzy] real,
+        B : [zakres_macierzy] real,
+        L : [zakres_macierzy] real;
 
-    var positive_definite : bool;
+    var czy_pozytywne_wartosci : bool;
 
     writeln ("Faktoryzacja Cholesky'ego");
     writeln ("   Wymiar macierzy: ", n);
@@ -41,8 +41,8 @@ odule performance_cholesky_test {
 
     A = 0.0;
 
-    forall (i,j) in mat_dom do
-      A (i,j) = + reduce (  [k in mat_dom.dim (1) ]
+    forall (i,j) in zakres_macierzy do
+      A (i,j) = + reduce (  [k in zakres_macierzy.dim (1) ]
     			    B (i, k) * B (j, k) );
 
     L = A; // algorytm nadpisuje macierz A
@@ -51,27 +51,27 @@ odule performance_cholesky_test {
     writeln ("\n\n");
     writeln ("Zrownoleglenie wierszowe: " );
 
-    var clock : Timer;
+    var zegar : Timer;
 
-    clock.start ();
+    zegar.start ();
 
-    positive_definite = scalar_row_major_outer_product_cholesky ( L );
+    czy_pozytywne_wartosci = cholesky_wierszowa_skalarna ( L );
 
-    clock.stop ();
-    if !reproducible_output then {
-      writeln ( "Czas wykonania:    ", clock.elapsed () );
+    zegar.stop ();
+    if !nie_drukuj_czasow then {
+      writeln ( "Czas wykonania:    ", zegar.elapsed () );
       writeln ( "Predkosc w megaflops: ",
-		( (n**3) / 3.0 )  / (10.0**6 * clock.elapsed () ) );
+		( (n**3) / 3.0 )  / (10.0**6 * zegar.elapsed () ) );
     }
 
-    forall j in mat_dom.dim (1) do
-      forall i in j+1 .. mat_dom.dim(1).high do
+    forall j in zakres_macierzy.dim (1) do
+      forall i in j+1 .. zakres_macierzy.dim(1).high do
 	      L (i,j) = L (j,i);
-    print_lower_triangle ( L );
+    wyswietl_dolny_trojkat_macierzy ( L );
 
 
-    if positive_definite then
-      check_factorization ( A, L );
+    if czy_pozytywne_wartosci then
+      sprawdzenie_poprawnosci ( A, L );
     else
       writeln ("Niepowodzenie faktoryzacji");
 
@@ -80,31 +80,31 @@ odule performance_cholesky_test {
 
     L = A;
 
-    /*if print_matrix_details then {
+    /*if wyswietlaj_macierz then {
       writeln ("test matrix");
-      print_lower_triangle ( L );
+      wyswietl_dolny_trojkat_macierzy ( L );
     }*/
 
     writeln ("\n\n");
     writeln ("Zrownoleglenie kolumnowa: ");
 
-    clock.clear ();
-    clock.start ();
+    zegar.clear ();
+    zegar.start ();
 
-    positive_definite = scalar_column_major_outer_product_cholesky ( L );
+    czy_pozytywne_wartosci = cholesky_kolumnowa_skalarna ( L );
 
-    clock.stop ();
+    zegar.stop ();
 
-    if !reproducible_output then {
-      writeln ( "Czas wykonania:    ", clock.elapsed () );
+    if !nie_drukuj_czasow then {
+      writeln ( "Czas wykonania:    ", zegar.elapsed () );
       writeln ( "Predkosc w megaflops: ",
-		( (n**3) / 3.0 )  / (10.0**6 * clock.elapsed () ) );
+		( (n**3) / 3.0 )  / (10.0**6 * zegar.elapsed () ) );
     }
 
-    print_lower_triangle ( L );
+    wyswietl_dolny_trojkat_macierzy ( L );
 
-    if positive_definite then
-      check_factorization ( A, L );
+    if czy_pozytywne_wartosci then
+      sprawdzenie_poprawnosci ( A, L );
     else
       writeln ("Niepowodzenie faktoryzacji");
 
@@ -112,7 +112,7 @@ odule performance_cholesky_test {
   }
 
   // sprawdza poprawnosc laczac L*L^T i porownujac z A
-  proc check_factorization ( A : [], L : [] )
+  proc sprawdzenie_poprawnosci ( A : [], L : [] )
     where ( A.domain.rank == 2 ) {
 
     assert ( A.domain.dim (1) == A.domain.dim (2)  &&
@@ -120,23 +120,23 @@ odule performance_cholesky_test {
 	     L.domain.dim (2) == A.domain.dim (2)
 	     );
 
-    const mat_dom  = A.domain,
-          mat_rows = A.domain.dim(1),
+    const zakres_macierzy  = A.domain,
+          wiersze_macierzy = A.domain.dim(1),
           n        = A.domain.dim(1).length;
 
-    const unit_roundoff = 2.0 ** (-53),
-          gamma_n1      = (n * unit_roundoff) / (1.0 - n * unit_roundoff);
+    const jednostka_zaokroglenia = 2.0 ** (-53),
+          gamma_n1      = (n * jednostka_zaokroglenia) / (1.0 - n * jednostka_zaokroglenia);
 
     var   max_ratio = 0.0;
 
-    var   d : [mat_rows] real;
+    var   d : [wiersze_macierzy] real;
 
-    for i in mat_rows do
+    for i in wiersze_macierzy do
       d (i) = sqrt ( A (i,i) );
 
-    forall (i,j) in mat_dom with (ref max_ratio) do {
+    forall (i,j) in zakres_macierzy with (ref max_ratio) do {
       const resid : real  = abs (A (i,j) -
-		    + reduce ( [k in mat_dom.dim(1) (..min (i,j))]
+		    + reduce ( [k in zakres_macierzy.dim(1) (..min (i,j))]
 			       L (i,k) * L (j,k) ) ) ;
       max_ratio = max ( max_ratio,
 			resid * (1 - gamma_n1) /
@@ -150,9 +150,9 @@ odule performance_cholesky_test {
   }
 
   // wyswietla dolna czesc macierzy (gorna jest taka sama)
-  proc print_lower_triangle ( L : [] ) {
+  proc wyswietl_dolny_trojkat_macierzy ( L : [] ) {
 
-    if print_matrix_details then
+    if wyswietlaj_macierz then
       for (i_row, i_col) in zip( L.domain.dim(1), L.domain.dim(2) ) do
 	writeln (i_row, ":  ", L(i_row, ..i_col) );
   }
