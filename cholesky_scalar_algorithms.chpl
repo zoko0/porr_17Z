@@ -8,15 +8,6 @@ module cholesky_scalar_algorithms {
             false | jesli A (j, j) <= 0.0
   */
 
-  /*
-  (TODO) ??? 
-    musimy rozkminic co oznacza:
-    where ( A.domain.rank == 2 ) na poczatku obu funkcji
-    zmienna A_rc_indices
-    konkretnie jak dzialają oba algorytmy (kazda linijka od poczatku pierwszego fora)!!
-
-  */
-
   proc scalar_row_major_outer_product_cholesky ( A : [] )  where ( A.domain.rank == 2 )  {
 
     const A_rc_indices = A.domain.dim (1);  // indices of either row or column

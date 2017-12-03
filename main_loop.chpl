@@ -1,23 +1,20 @@
-module performance_cholesky_test {
+odule performance_cholesky_test {
 
   use Random, Time;
-  use cholesky_scalar_algorithms;
+  use cholesky;
 
   /*****************************************************************************
-
     Konfigurajca:
     n - wymiar macierzy
     index_base - tylko i wylacznie do wyswietlania, powinno byc rowne 0 (TODO)
-
     print_matrix_details - czy drukowac macierze (funkcja print_lower_triangle)
-    reproductible_output - false - oznacza, że drukuje czasy
-
+    reproductible_output - false - oznacza, ze drukuje czasy
   *****************************************************************************/
 
-  config const n = 4;
+  config const n = 1000;
   config const index_base = 0;
 
-  config const print_matrix_details = true;
+  config const print_matrix_details = false;
   config const reproducible_output = false;
 
   /*****************************************************************************
@@ -36,23 +33,11 @@ module performance_cholesky_test {
 
     var positive_definite : bool;
 
-    writeln ("Cholesky Factorization Scalar Performance Tests");
-    writeln ("   Matrix Dimension: ", n);
-    writeln ("   Indexing Base   : ", index_base);
+    writeln ("Faktoryzacja Cholesky'ego");
+    writeln ("   Wymiar macierzy: ", n);
     writeln ("");
 
-    // ---------------------------------------------------------------
-    // create a test problem, starting with a random general matrix B. (TODO) po co to
-    // ---------------------------------------------------------------
-
     Rand.fillRandom (B);
-
-    // -------------------------------------------------------------
-    // create a positive definite matrix A by setting A equal to the
-    // matrix-matrix product B B^T.  This normal equations matrix is
-    // positive-definite as long as B is full rank.
-    //(TODO) po co to
-    // -------------------------------------------------------------
 
     A = 0.0;
 
@@ -60,13 +45,11 @@ module performance_cholesky_test {
       A (i,j) = + reduce (  [k in mat_dom.dim (1) ]
     			    B (i, k) * B (j, k) );
 
-    // factorization algorithms overwrite a copy of A, leaving
-    // the factor L in its place
+    L = A; // algorytm nadpisuje macierz A
 
-    L = A;
 
     writeln ("\n\n");
-    writeln ("scalar row major outer product cholesky factorization: " );
+    writeln ("Zrownoleglenie wierszowe: " );
 
     var clock : Timer;
 
@@ -76,8 +59,8 @@ module performance_cholesky_test {
 
     clock.stop ();
     if !reproducible_output then {
-      writeln ( "Cholesky Factorization time:    ", clock.elapsed () );
-      writeln ( " collective speed in megaflops: ",
+      writeln ( "Czas wykonania:    ", clock.elapsed () );
+      writeln ( "Predkosc w megaflops: ",
 		( (n**3) / 3.0 )  / (10.0**6 * clock.elapsed () ) );
     }
 
@@ -86,23 +69,24 @@ module performance_cholesky_test {
 	      L (i,j) = L (j,i);
     print_lower_triangle ( L );
 
+
     if positive_definite then
       check_factorization ( A, L );
     else
-      writeln ("factorization failed for non-positive semi-definite matrix");
+      writeln ("Niepowodzenie faktoryzacji");
 
     writeln ("\n\n");
 
 
     L = A;
 
-    if print_matrix_details then {
+    /*if print_matrix_details then {
       writeln ("test matrix");
       print_lower_triangle ( L );
-    }
+    }*/
 
     writeln ("\n\n");
-    writeln ("scalar column major outer product cholesky factorization ");
+    writeln ("Zrownoleglenie kolumnowa: ");
 
     clock.clear ();
     clock.start ();
@@ -112,8 +96,8 @@ module performance_cholesky_test {
     clock.stop ();
 
     if !reproducible_output then {
-      writeln ( "Cholesky Factorization time:    ", clock.elapsed () );
-      writeln ( " collective speed in megaflops: ",
+      writeln ( "Czas wykonania:    ", clock.elapsed () );
+      writeln ( "Predkosc w megaflops: ",
 		( (n**3) / 3.0 )  / (10.0**6 * clock.elapsed () ) );
     }
 
@@ -122,12 +106,12 @@ module performance_cholesky_test {
     if positive_definite then
       check_factorization ( A, L );
     else
-      writeln ("factorization failed for non-positive semi-definite matrix");
+      writeln ("Niepowodzenie faktoryzacji");
 
     delete Rand;
   }
 
-  // sprawdza poprawnosc łącząć L*L^T i porownujac z A
+  // sprawdza poprawnosc laczac L*L^T i porownujac z A
   proc check_factorization ( A : [], L : [] )
     where ( A.domain.rank == 2 ) {
 
@@ -140,7 +124,7 @@ module performance_cholesky_test {
           mat_rows = A.domain.dim(1),
           n        = A.domain.dim(1).length;
 
-    const unit_roundoff = 2.0 ** (-53), // IEEE 64 bit floating point
+    const unit_roundoff = 2.0 ** (-53),
           gamma_n1      = (n * unit_roundoff) / (1.0 - n * unit_roundoff);
 
     var   max_ratio = 0.0;
@@ -150,7 +134,7 @@ module performance_cholesky_test {
     for i in mat_rows do
       d (i) = sqrt ( A (i,i) );
 
-    forall (i,j) in mat_dom with (ref max_ratio) do { // race
+    forall (i,j) in mat_dom with (ref max_ratio) do {
       const resid : real  = abs (A (i,j) -
 		    + reduce ( [k in mat_dom.dim(1) (..min (i,j))]
 			       L (i,k) * L (j,k) ) ) ;
@@ -160,12 +144,12 @@ module performance_cholesky_test {
     }
 
     if max_ratio <= 1.0 then
-      writeln ("factorization successful");
+      writeln ("Faktoryzacja wykonana z powodzeniem");
     else
-      writeln ("factorization error exceeds bound by ratio:", max_ratio);
+      writeln ("Blad faktoryzacji. Kod:", max_ratio);
   }
 
-  // wyświetla dolna czesc macierzy (gorna jest taka sama)
+  // wyswietla dolna czesc macierzy (gorna jest taka sama)
   proc print_lower_triangle ( L : [] ) {
 
     if print_matrix_details then
