@@ -1,7 +1,7 @@
 module cholesky_test_wydajnosci {
 
   use Random, Time;
-  use cholesky_algorytmy_skalarne;
+  use cholesky_algorytmy;
 
   /*****************************************************************************
     Konfigurajca:
@@ -11,7 +11,7 @@ module cholesky_test_wydajnosci {
     nie_drukuj_czasow - false - oznacza, ze drukuje czasy
   *****************************************************************************/
 
-  config const n = 1000;
+  config const n = 10;
   config const bazowy_indeks = 0;
 
   config const wyswietlaj_macierz = false;
