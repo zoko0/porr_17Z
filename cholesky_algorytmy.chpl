@@ -2,7 +2,7 @@ module cholesky_algorytmy {
 
   /*
     algorytm wierszowy
-    input: kwadrwatowa symetrczna macierzy - A
+    input: kwadratowa symetryczna macierz - A
     output: nadpisana macierz A przez faktoryzacje cholesky - L
     zwraca: true  | jesli A (j, j) > 0.0
             false | jesli A (j, j) <= 0.0
@@ -29,7 +29,7 @@ module cholesky_algorytmy {
 
   /*
     algorytm kolumnowy
-    input: kwadrwatowa symetrczna macierzy - A
+    input: kwadratowa symetryczna macierz - A
     output: nadpisana macierz A przez faktoryzacje cholesky - L
     zwraca: true  | jesli A (j, j) > 0.0
             false | jesli A (j, j) <= 0.0
