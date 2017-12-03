@@ -9,7 +9,7 @@ module cholesky_scalar_algorithms {
   */
 
   /*
-  (TODO)
+  (TODO) ??? 
     musimy rozkminic co oznacza:
     where ( A.domain.rank == 2 ) na poczatku obu funkcji
     zmienna A_rc_indices
