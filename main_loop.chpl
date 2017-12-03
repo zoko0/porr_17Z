@@ -3,13 +3,13 @@ module cholesky_test_wydajnosci {
   use Random, Time;
   use cholesky_algorytmy;
 
-  /*****************************************************************************
-    Konfigurajca:
+  /*
+    Konfiguracjca:
     n - wymiar macierzy
     bazowy_indeks - tylko i wylacznie do wyswietlania, powinno byc rowne 0
     wyswietlaj_macierz - czy drukowac macierze (funkcja wyswietl_dolny_trojkat_macierzy)
     nie_drukuj_czasow - false - oznacza, ze drukuje czasy
-  *****************************************************************************/
+  */
 
   config const n = 10;
   config const bazowy_indeks = 0;
@@ -17,9 +17,9 @@ module cholesky_test_wydajnosci {
   config const wyswietlaj_macierz = false;
   config const nie_drukuj_czasow = false;
 
-  /*****************************************************************************
+  /*
     Koniec konfiguracji
-  *****************************************************************************/
+  */
 
   proc main {
 
