@@ -1,7 +1,8 @@
 module cholesky_test_wydajnosci {
 
   use Random, Time;
-  use cholesky_algorytmy;
+  use cholesky_algorytmy_skalarne;
+  use cholesky_algorytmy_wektorowe;
 
   /*
     Konfiguracjca:
@@ -34,7 +35,7 @@ module cholesky_test_wydajnosci {
     var czy_pozytywne_wartosci : bool;
 
     writeln ("Faktoryzacja Cholesky'ego");
-    writeln ("   Wymiar macierzy: ", n);
+    writeln ("Wymiar macierzy: ", n);
     writeln ("");
 
     Rand.fillRandom (B);

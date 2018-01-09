@@ -1,4 +1,4 @@
-module cholesky_algorytmy {
+module cholesky_algorytmy_skalarne {
 
   /*
     algorytm wierszowy
@@ -44,7 +44,6 @@ module cholesky_algorytmy {
     }
     return true;
   }
-
 
 
   /*
