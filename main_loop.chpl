@@ -47,9 +47,36 @@ module cholesky_test_wydajnosci {
 
     L = A; // algorytm nadpisuje macierz A
 
+    writeln ("\n\n");
+    writeln ("Wersja wierszowa, bez zrownoleglenia: " );
+
+    var zegar : Timer;
+
+    zegar.start ();
+
+    czy_pozytywne_wartosci = cholesky_wierszowa_bez_zrownoleglenia ( L );
+
+    zegar.stop ();
+    if !nie_drukuj_czasow then {
+      writeln ( "Czas wykonania:    ", zegar.elapsed () );
+      writeln ( "Predkosc w megaflops: ",	( (n**3) / 3.0 )  / (10.0**6 * zegar.elapsed () ) );
+    }
+
+    forall j in zakres_macierzy.dim (1) do
+      forall i in j+1 .. zakres_macierzy.dim(1).high do
+	      L (i,j) = L (j,i);
+    wyswietl_dolny_trojkat_macierzy ( L );
+
+
+    if czy_pozytywne_wartosci then
+      sprawdzenie_poprawnosci ( A, L );
+    else
+      writeln ("Niepowodzenie faktoryzacji");
 
     writeln ("\n\n");
-    writeln ("Zrownoleglenie wierszowe: " );
+
+    writeln ("\n\n");
+    writeln ("Wersja wierszowa, z zrownolegleniem: " );
 
     var zegar : Timer;
 
@@ -60,8 +87,7 @@ module cholesky_test_wydajnosci {
     zegar.stop ();
     if !nie_drukuj_czasow then {
       writeln ( "Czas wykonania:    ", zegar.elapsed () );
-      writeln ( "Predkosc w megaflops: ",
-		( (n**3) / 3.0 )  / (10.0**6 * zegar.elapsed () ) );
+      writeln ( "Predkosc w megaflops: ",	( (n**3) / 3.0 )  / (10.0**6 * zegar.elapsed () ) );
     }
 
     forall j in zakres_macierzy.dim (1) do
@@ -86,7 +112,34 @@ module cholesky_test_wydajnosci {
     }*/
 
     writeln ("\n\n");
-    writeln ("Zrownoleglenie kolumnowa: ");
+    writeln ("Wersja kolumnowa, bez zrownoleglenia: " );
+
+    zegar.clear ();
+    zegar.start ();
+
+    czy_pozytywne_wartosci = cholesky_kolumnowa_bez_zrownoleglenia ( L );
+
+    zegar.stop ();
+
+    if !nie_drukuj_czasow then {
+      writeln ( "Czas wykonania:    ", zegar.elapsed () );
+      writeln ( "Predkosc w megaflops: ",
+    ( (n**3) / 3.0 )  / (10.0**6 * zegar.elapsed () ) );
+    }
+
+    wyswietl_dolny_trojkat_macierzy ( L );
+
+    if czy_pozytywne_wartosci then
+      sprawdzenie_poprawnosci ( A, L );
+    else
+      writeln ("Niepowodzenie faktoryzacji");
+
+    delete Rand;
+    }
+
+
+    writeln ("\n\n");
+    writeln ("Wersja kolumnowa, z zrownolegleniem: " );
 
     zegar.clear ();
     zegar.start ();
@@ -110,6 +163,7 @@ module cholesky_test_wydajnosci {
 
     delete Rand;
   }
+
 
   // sprawdza poprawnosc laczac L*L^T i porownujac z A
   proc sprawdzenie_poprawnosci ( A : [], L : [] )
@@ -148,6 +202,7 @@ module cholesky_test_wydajnosci {
     else
       writeln ("Blad faktoryzacji. Kod:", max_ratio);
   }
+
 
   // wyswietla dolna czesc macierzy (gorna jest taka sama)
   proc wyswietl_dolny_trojkat_macierzy ( L : [] ) {
