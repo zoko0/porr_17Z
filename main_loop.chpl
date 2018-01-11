@@ -76,7 +76,6 @@ module cholesky_test_wydajnosci {
 
     writeln ("\n\n");
 
-    writeln ("\n\n");
     writeln ("Wersja wierszowa, z zrownolegleniem: " );
 
     var zegar : Timer;
@@ -94,8 +93,8 @@ module cholesky_test_wydajnosci {
     forall j in zakres_macierzy.dim (1) do
       forall i in j+1 .. zakres_macierzy.dim(1).high do
 	      L (i,j) = L (j,i);
-    wyswietl_dolny_trojkat_macierzy ( L );
 
+    wyswietl_dolny_trojkat_macierzy ( L );
 
     if czy_pozytywne_wartosci then
       sprawdzenie_poprawnosci ( A, L );
@@ -125,7 +124,7 @@ module cholesky_test_wydajnosci {
     if !nie_drukuj_czasow then {
       writeln ( "Czas wykonania:    ", zegar.elapsed () );
       writeln ( "Predkosc w megaflops: ",
-    ( (n**3) / 3.0 )  / (10.0**6 * zegar.elapsed () ) );
+      ( (n**3) / 3.0 )  / (10.0**6 * zegar.elapsed () ) );
     }
 
     wyswietl_dolny_trojkat_macierzy ( L );
@@ -136,7 +135,7 @@ module cholesky_test_wydajnosci {
       writeln ("Niepowodzenie faktoryzacji");
 
     delete Rand;
-    }
+  }
 
 
     writeln ("\n\n");
@@ -164,6 +163,8 @@ module cholesky_test_wydajnosci {
 
     delete Rand;
   }
+
+
 
 
   // sprawdza poprawnosc laczac L*L^T i porownujac z A
