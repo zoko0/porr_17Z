@@ -17,29 +17,28 @@ module cholesky_wektorowy_algorytm {
 
     writeln ( "wielkosc_bloku: ", wielkosc_bloku );
 
-    for (all_cols, active_cols, later_cols) in iteruje_blok_kolumny ( wskazuje_wiersz_kolumne, wielkosc_bloku ) do {
+    for (kolumny, kolumny_aktywne, kolumny_next) in iteruje_blok_kolumny ( wskazuje_wiersz_kolumne, wielkosc_bloku ) do {
 
-    	// compute the Cholesky factor of the active diagonal block
-
+    	// oblicz choleskiego dla przekatnej maciezry
     	czy_pozytywne_wartosci = cholesky_kolumnowa_bez_zrownoleglenia
-    	                        ( A (active_cols, active_cols) );
+    	                        ( A (kolumny_aktywne, kolumny_aktywne) );
 
-    	if czy_pozytywne_wartosci && later_cols.length > 0 then {
+    	if czy_pozytywne_wartosci && kolumny_next.length > 0 then {
 
     	  // compute the remainder of the active block column of L by a
     	  // block triangular solve realizing the equation
-    	  //      L (later_cols, active_cols) =
-    	  //                              L (later_cols, active_cols) *
-    	  //                              L (active_cols, active_cols) ** (-T)
+    	  //      L (kolumny_next, kolumny_aktywne) =
+    	  //                              L (kolumny_next, kolumny_aktywne) *
+    	  //                              L (kolumny_aktywne, kolumny_aktywne) ** (-T)
 
-    	 // transposed_block_triangular_solve ( A (active_cols, active_cols),
-    		//         		      A (later_cols, active_cols) );
+    	  rozwiaz_blok_transponowany ( A (kolumny_aktywne, kolumny_aktywne),
+    		         		      A (kolumny_next, kolumny_aktywne) );
 
     	// make rank wielkosc_bloku (outerproduct) modification to the remaining
     	// block rows and columns of  A, which become the Schur complement
 
-    	 // symmetric_block_schur_complement (  A (later_cols, later_cols),
-    		//			      A (later_cols, active_cols),
+    	 // symetryczny_blok_uzupelnianie (  A (kolumny_next, kolumny_next),
+    		//			      A (kolumny_next, kolumny_aktywne),
     		//			      wielkosc_bloku );
 
     	}
@@ -47,6 +46,88 @@ module cholesky_wektorowy_algorytm {
       }
     return true;
   }
+
+  /*
+    Block Triangular Solve
+
+    // ------------------------------------------------------
+    // Solve the block equation
+    //      L_przekatna_T = A_offdiag * L_przekatna^{-T}
+    //           or
+    //      L_przekatna_T^T = L_przekatna^{-1} A_offdiag^T
+    // by triangular solve.
+    // This code is specialized to a factorization case where
+    // L and A are submatrices of a common larger matrix.
+    // ------------------------------------------------------
+  */
+  proc rozwiaz_blok_transponowany ( L_przekatna : [], L_przekatna_T : [] ) {
+
+
+    const kolumny_aktywne = L_przekatna.domain.dim(1);
+
+    for (i,j) in L_przekatna_T.domain do {
+      L_przekatna_T (i,j) -=
+	+reduce [k in kolumny_aktywne (.. j-1)] L_przekatna_T (i,k) * L_przekatna (j,k);
+      L_przekatna_T (i,j) = L_przekatna_T (i,j) / L_przekatna (j,j);
+      }
+  }
+
+  /*
+    Symmetric Block Outer Product_Modification
+  */
+  proc symetryczny_blok_uzupelnianie ( A : [] , L : [], block_size ) where ( A.domain.rank == 2 && L.domain.rank == 2) {
+    for ( A_top_and_bottom_rows, A_top_rows, A_bottom_rows ) in iterated_block_column_partition (L.domain.dim (1), block_size) do {
+    	symetryczna_przekatna_modyfikacja
+    	             ( L (A_top_rows, ..),
+    		       A (A_top_rows, A_top_rows) );
+
+    	if A_bottom_rows.length > 0 then
+    	  symetryczna_przekatna_T_modyfikacja
+    	          ( L (A_top_and_bottom_rows, ..),
+    		    A (A_bottom_rows, A_top_rows) );
+    }
+  }
+
+
+  /*
+    Symmetric Block Outer Product Modification for a single diagonal block
+
+    // -----------------------------------------------------------
+    // form diagonal block A (K,K) = A (K,K) - L (K,J) L^T (J,K)
+    //                             = A (K,K) - L (K,J) L (K,J)^T
+    // code is specialized to factorization case where L and A
+    // are submatrices of a single larger matrix.
+    // -----------------------------------------------------------
+  */
+ proc symetryczna_przekatna_modyfikacja ( L : [], A : [] ) {
+   assert ( A.domain.dim (1) == A.domain.dim (2) && A.domain.dim (1) == L.domain.dim (1) );
+   const A_diag_rows   = A.domain.dim (1),
+         L_active_cols = L.domain.dim (2);
+
+   forall i in A_diag_rows do
+     forall j in A_diag_rows (..i) do
+        A (i,j) -= + reduce [k in L_active_cols] L (i,k) * L (j,k);
+   }
+
+
+ /*
+  Symmetric Block Outer Product Modification for a single offdiagonal block
+
+  // -------------------------------------------------------------
+  // Form a single offdiagonal block
+  //       A (I,K) = A (I,K) - L (I,J) L^T (J,K)
+  //               = A (I,K) - L (I,J) L (J,K)^T
+  // This code is specialized to the triangular factorization case
+  // where L and A are submatrices of a common larger matrix.
+  // -------------------------------------------------------------
+*/
+ proc symetryczna_przekatna_T_modyfikacja ( L : [], A : [] ) {
+
+   const L_active_cols  = L.domain.dim (2);
+
+   forall (i,j) in A.domain do
+     A (i,j) -= + reduce [k in L_active_cols] L (i,k) * L (j,k);
+ }
 
 
   /*
