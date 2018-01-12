@@ -1,6 +1,6 @@
-module cholesky_wektorowy_algorytm {
+module cholesky_algorytmy_wektorowe {
 
-  use cholesky_algorytmy_skalarne;
+  use cholesky_algorytmy;
 
   const empty_range = 1..0;
 

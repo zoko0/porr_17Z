@@ -8,5 +8,5 @@ Temat: Faktoryzacja Choleskiego
 ETAP 2:
 Cholesky w wersji blokowej.
 
-Informacje (dla nas; piszę tu zeby bylo widoczne;):
-Wygląda na to, że iteratory w Chapelu działają szeregowo, przez to może wyjść, że wersja blokowa, będzie działać wolniej.
+Informacje (dla nas; piszę tu zeby bylo widoczne):
+Wygląda na to, że iteratory w Chapelu działają szeregowo. Blokowa jest posranie szybka.

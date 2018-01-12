@@ -1,7 +1,7 @@
 module cholesky_test_wydajnosci {
 
   use Random, Time;
-  use cholesky_algorytmy_skalarne;
+  use cholesky_algorytmy;
   use cholesky_algorytmy_wektorowe;
 
   /*
@@ -10,6 +10,7 @@ module cholesky_test_wydajnosci {
     bazowy_indeks - tylko i wylacznie do wyswietlania, powinno byc rowne 0
     wyswietlaj_macierz - czy drukowac macierze (funkcja wyswietl_dolny_trojkat_macierzy)
     nie_drukuj_czasow - false - oznacza, ze drukuje czasy
+    wielkosc_bloku - blok dla alg blokowego
   */
 
   config const n = 10;
@@ -17,6 +18,8 @@ module cholesky_test_wydajnosci {
 
   config const wyswietlaj_macierz = false;
   config const nie_drukuj_czasow = false;
+
+  config const wielkosc_bloku = 2;
 
   /*
     Koniec konfiguracji
@@ -78,8 +81,6 @@ module cholesky_test_wydajnosci {
 
     writeln ("Wersja wierszowa, z zrownolegleniem: " );
 
-    var zegar : Timer;
-
     zegar.start ();
 
     czy_pozytywne_wartosci = cholesky_wierszowa_skalarna ( L );
@@ -134,10 +135,6 @@ module cholesky_test_wydajnosci {
     else
       writeln ("Niepowodzenie faktoryzacji");
 
-    delete Rand;
-  }
-
-
     writeln ("\n\n");
     writeln ("Wersja kolumnowa, z zrownolegleniem: " );
 
@@ -145,6 +142,31 @@ module cholesky_test_wydajnosci {
     zegar.start ();
 
     czy_pozytywne_wartosci = cholesky_kolumnowa_skalarna ( L );
+
+    zegar.stop ();
+
+    if !nie_drukuj_czasow then {
+      writeln ( "Czas wykonania:    ", zegar.elapsed () );
+      writeln ( "Predkosc w megaflops: ",
+		( (n**3) / 3.0 )  / (10.0**6 * zegar.elapsed () ) );
+    }
+
+    wyswietl_dolny_trojkat_macierzy ( L );
+
+    if czy_pozytywne_wartosci then
+      sprawdzenie_poprawnosci ( A, L );
+    else
+      writeln ("Niepowodzenie faktoryzacji");
+
+
+    writeln ("\n\n");
+    writeln ("Wersja kolumnowa, blokowa: " );
+
+    zegar.clear ();
+    zegar.start ();
+
+
+    czy_pozytywne_wartosci = blokowy_cholesky ( L, wielkosc_bloku );
 
     zegar.stop ();
 
