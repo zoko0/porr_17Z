@@ -77,6 +77,8 @@ module cholesky_test_wydajnosci {
     else
       writeln ("Niepowodzenie faktoryzacji");
 
+    L = A;
+
     writeln ("\n\n");
 
     writeln ("Wersja wierszowa, z zrownolegleniem: " );
@@ -135,6 +137,8 @@ module cholesky_test_wydajnosci {
     else
       writeln ("Niepowodzenie faktoryzacji");
 
+    L = A;
+
     writeln ("\n\n");
     writeln ("Wersja kolumnowa, z zrownolegleniem: " );
 
@@ -158,6 +162,7 @@ module cholesky_test_wydajnosci {
     else
       writeln ("Niepowodzenie faktoryzacji");
 
+    L = A;
 
     writeln ("\n\n");
     writeln ("Wersja kolumnowa, blokowa: " );
