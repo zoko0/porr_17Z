@@ -3,6 +3,8 @@ module cholesky_algorytmy_wektorowe {
   use cholesky_algorytmy;
 
   const empty_range = 1..0;
+  config const wielkosc_bloku = 13;
+
 
   /*
     wersja kolumnowa cholesky
@@ -17,7 +19,7 @@ module cholesky_algorytmy_wektorowe {
 
     writeln ( "wielkosc_bloku: ", wielkosc_bloku );
 
-    for (kolumny, kolumny_aktywne, kolumny_next) in iteruje_blok_kolumny ( wskazuje_wiersz_kolumne, wielkosc_bloku ) do {
+    for (kolumny, kolumny_aktywne, kolumny_next) in symmetric_reduced_matrix_2_by_2_block_partition ( wskazuje_wiersz_kolumne) do {
 
     	// oblicz choleskiego dla przekatnej maciezry
     	czy_pozytywne_wartosci = cholesky_kolumnowa_bez_zrownoleglenia
@@ -27,23 +29,22 @@ module cholesky_algorytmy_wektorowe {
 
     	  // compute the remainder of the active block column of L by a
     	  // block triangular solve realizing the equation
-    	  //      L (kolumny_next, kolumny_aktywne) =
+    	  //L (kolumny_next, kolumny_aktywne) =
     	  //                              L (kolumny_next, kolumny_aktywne) *
-    	  //                              L (kolumny_aktywne, kolumny_aktywne) ** (-T)
+    	  //                              L (kolumny_aktywne, kolumny_aktywne) ** (-T);
 
-    	  rozwiaz_blok_transponowany ( A (kolumny_aktywne, kolumny_aktywne),
-    		         		      A (kolumny_next, kolumny_aktywne) );
+    	  rozwiaz_blok_transponowany ( A (kolumny_aktywne, kolumny_aktywne), A (kolumny_next, kolumny_aktywne) );
 
-    	// make rank wielkosc_bloku (outerproduct) modification to the remaining
-    	// block rows and columns of  A, which become the Schur complement
+    	  // make rank wielkosc_bloku (outerproduct) modification to the remaining
+    	  // block rows and columns of  A, which become the Schur complement
 
-    	 // symetryczny_blok_uzupelnianie (  A (kolumny_next, kolumny_next),
-    		//			      A (kolumny_next, kolumny_aktywne),
-    		//			      wielkosc_bloku );
+    	  symetryczny_blok_uzupelnianie (  A (kolumny_next, kolumny_next),
+    					      A (kolumny_next, kolumny_aktywne),
+    					      wielkosc_bloku );
 
     	}
 	    else if !czy_pozytywne_wartosci then return false;
-      }
+    }
     return true;
   }
 
@@ -75,8 +76,8 @@ module cholesky_algorytmy_wektorowe {
   /*
     Symmetric Block Outer Product_Modification
   */
-  proc symetryczny_blok_uzupelnianie ( A : [] , L : [], block_size ) where ( A.domain.rank == 2 && L.domain.rank == 2) {
-    for ( A_top_and_bottom_rows, A_top_rows, A_bottom_rows ) in iterated_block_column_partition (L.domain.dim (1), block_size) do {
+  proc symetryczny_blok_uzupelnianie ( A : [] , L : [], wielkosc_bloku ) where ( A.domain.rank == 2 && L.domain.rank == 2) {
+    for ( A_top_and_bottom_rows, A_top_rows, A_bottom_rows ) in symmetric_reduced_matrix_2_by_2_block_partition (L.domain.dim (1)) do {
     	symetryczna_przekatna_modyfikacja
     	             ( L (A_top_rows, ..),
     		       A (A_top_rows, A_top_rows) );
@@ -121,60 +122,44 @@ module cholesky_algorytmy_wektorowe {
   // where L and A are submatrices of a common larger matrix.
   // -------------------------------------------------------------
 */
- proc symetryczna_przekatna_T_modyfikacja ( L : [], A : [] ) {
+   proc symetryczna_przekatna_T_modyfikacja ( L : [], A : [] ) {
 
-   const L_active_cols  = L.domain.dim (2);
+     const L_active_cols  = L.domain.dim (2);
 
-   forall (i,j) in A.domain do
-     A (i,j) -= + reduce [k in L_active_cols] L (i,k) * L (j,k);
- }
-
+     forall (i,j) in A.domain do
+       A (i,j) -= + reduce [k in L_active_cols] L (i,k) * L (j,k);
+   }
 
   /*
-    iteruje po wektorach ( kolumny lub wiersze macierzy )
+  iterator blokowy
   */
-  iter iteruje_blok_czesc ( indeks_zasieg, wielkosc_bloku ) {
-    var liczba_krokow_blokowych = ( indeks_zasieg + wielkosc_bloku -1 ) / wielkosc_bloku;
 
-    // poczatek
-    var dolny_blok = indeks_zasieg.low;
+  iter vector_block_partition ( indeks_zasieg )
+  {
+    // -------------------------------------------------------------------
+    // Deliver as ranges the block partitioning of a vector.
+    // The block size to be used is delivered via a global constant
+    // rather than as an argument to allow this code to emulate a code
+    // in which the block size were obtained from a blocking distribution.
+    // -------------------------------------------------------------------
 
-    // kontynuacja
-    for blok_krok in 1 .. liczba_krokow_blokowych -1 do {
-      yield dolny_blok .. #wielkosc_bloku;
-      dolny_blok += wielkosc_bloku;
-    }
-
-    // koncowy blok
-    yield dolny_blok .. indeks_zasieg.high;
+    for dolny_blok in indeks_zasieg by wielkosc_bloku do
+      yield dolny_blok .. min ( dolny_blok + wielkosc_bloku - 1, indeks_zasieg.high );
   }
 
 
   /*
-    zwraca wiersze w danej kolumnie
+    zwraca blok 2x2
   */
-  iter iteruje_blok_kolumny ( indeks_zasieg, wielkosc_bloku ) {
-    var liczba_krokow_blokowych = ( indeks_zasieg.length + wielkosc_bloku - 1 ) / wielkosc_bloku;
+  iter symmetric_reduced_matrix_2_by_2_block_partition ( indeks_zasieg ) {
 
-    //poczatek
-    var dolny_blok      = indeks_zasieg.low;
-    var next_dolny_blok = dolny_blok + wielkosc_bloku;
+    for dolny_blok in indeks_zasieg by wielkosc_bloku do {
+      var next_dolny_blok = dolny_blok + wielkosc_bloku;
 
-    //kontynuacja
-    for block_step in 1 .. liczba_krokow_blokowych - 1 do {
       yield ( dolny_blok      .. indeks_zasieg.high,
-	      dolny_blok      .. #wielkosc_bloku,
+	      dolny_blok      .. min ( next_dolny_blok - 1, indeks_zasieg.high ),
 	      next_dolny_blok .. indeks_zasieg.high );
-
-      dolny_blok       = next_dolny_blok;
-      next_dolny_blok += wielkosc_bloku;
     }
-
-    // koncowy blok
-    yield  ( dolny_blok .. indeks_zasieg.high,
-	     dolny_blok .. indeks_zasieg.high,
-	     empty_range );
-
   }
 
 }

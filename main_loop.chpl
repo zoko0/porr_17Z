@@ -19,7 +19,8 @@ module cholesky_test_wydajnosci {
   config const wyswietlaj_macierz = false;
   config const nie_drukuj_czasow = false;
 
-  config const wielkosc_bloku = 2;
+  config const wielkosc_bloku = 13;
+
 
   /*
     Koniec konfiguracji
