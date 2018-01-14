@@ -22,7 +22,7 @@ module cholesky_algorytmy_wektorowe {
     for (kolumny, kolumny_aktywne, kolumny_next) in symmetric_reduced_matrix_2_by_2_block_partition ( wskazuje_wiersz_kolumne) do {
 
     	// oblicz choleskiego dla przekatnej maciezry
-    	czy_pozytywne_wartosci = cholesky_kolumnowa_bez_zrownoleglenia
+    	czy_pozytywne_wartosci = cholesky_kolumnowa_skalarna
     	                        ( A (kolumny_aktywne, kolumny_aktywne) );
 
     	if czy_pozytywne_wartosci && kolumny_next.length > 0 then {
